@@ -1,0 +1,133 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="default">
+    <meta name="theme-color" content="#e91e63">
+    <title>💕 Love Music Room</title>
+    <link rel="stylesheet" href="styles.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+</head>
+<body>
+    <div class="container">
+        <!-- Welcome Screen -->
+        <div class="welcome-screen" id="welcome-screen">
+            <h1><i class="fas fa-heart heart-pulse"></i> Love Music Room</h1>
+            <p>Share music and chat with your loved ones in real-time</p>
+            <form class="join-form" id="join-form">
+                <input type="text" id="username" placeholder="Enter your name" required>
+                <input type="text" id="room-name" placeholder="Enter room name" required>
+                <button type="submit" class="join-btn">
+                    <i class="fas fa-heart"></i> Join Room
+                </button>
+            </form>
+        </div>
+
+        <!-- Chat Room -->
+        <div class="chat-room" id="chat-room">
+            <div class="room-header">
+                <h2><i class="fas fa-music"></i> <span id="room-title">Music Room</span></h2>
+                <div class="room-info">
+                    <span id="user-count">1 user online</span>
+                </div>
+                <button class="leave-btn" id="leave-btn">
+                    <i class="fas fa-sign-out-alt"></i> Leave
+                </button>
+            </div>
+
+            <div class="room-content">
+                <!-- Music Player Section -->
+                <div class="music-player">
+                    <!-- Music Controls -->
+                    <div class="music-controls">
+                        <div class="current-track">
+                            <h3 id="current-track-title">No track playing</h3>
+                            <p id="current-track-artist">Select a track to start</p>
+                        </div>
+                        
+                        <div class="control-buttons">
+                            <button class="control-btn" id="play-pause-btn" disabled>
+                                <i class="fas fa-play"></i>
+                            </button>
+                        </div>
+
+                        <div class="progress-container">
+                            <div class="progress-fill" id="progress-fill"></div>
+                        </div>
+                        <div class="time-display">
+                            <span id="current-time">0:00</span>
+                            <span id="total-time">0:00</span>
+                        </div>
+                    </div>
+
+                    <!-- Upload Section -->
+                    <div class="upload-section">
+                        <h4><i class="fas fa-cloud-upload-alt"></i> Upload Your Song</h4>
+                        <form id="upload-form" class="upload-form">
+                            <div class="file-input-container">
+                                <input type="file" id="song-file" accept="audio/*" required>
+                                <label for="song-file" class="file-label">
+                                    <i class="fas fa-music"></i>
+                                    <span>Choose audio file (MP3, WAV, OGG, M4A)</span>
+                                </label>
+                            </div>
+                            <div class="upload-fields">
+                                <input type="text" id="song-title" placeholder="Song title" required>
+                            </div>
+                            <button type="submit" class="btn-upload">
+                                <i class="fas fa-upload"></i>
+                                Upload Song
+                            </button>
+                        </form>
+                        <div id="upload-progress" class="upload-progress" style="display: none;">
+                            <div class="progress-bar">
+                                <div id="upload-fill"></div>
+                            </div>
+                            <span id="upload-status">Uploading...</span>
+                        </div>
+                    </div>
+
+                    <!-- Track Tabs -->
+                    <div class="track-tabs">
+                        <button class="tab-btn active" data-tab="all">
+                            <i class="fas fa-list"></i> All Tracks
+                        </button>
+                        <button class="tab-btn" data-tab="uploaded">
+                            <i class="fas fa-cloud"></i> Uploaded
+                        </button>
+                    </div>
+
+                    <!-- Track List -->
+                    <div class="track-list">
+                        <h4><i class="fas fa-music"></i> Available Tracks</h4>
+                        <div id="tracks-container">
+                            <!-- Tracks will be populated here -->
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Chat Section -->
+                <div class="chat-section">
+                    <div class="chat-messages" id="chat-messages">
+                        <div class="message system">
+                            <i class="fas fa-heart"></i> Welcome to the Love Music Room! Start chatting and sharing music with your loved ones.
+                        </div>
+                    </div>
+                    <div class="chat-input">
+                        <input type="text" id="message-input" placeholder="Type your message..." maxlength="500">
+                        <button class="send-btn" id="send-btn">
+                            <i class="fas fa-paper-plane"></i>
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="/socket.io/socket.io.js"></script>
+    <script src="app.js"></script>
+</body>
+</html> 
