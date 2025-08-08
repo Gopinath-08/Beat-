@@ -410,6 +410,61 @@ function joinRoom(username, roomName) {
         renderTracks();
     });
 
+    // Audio sharing event from mobile app
+    socket.on('audioShared', (data) => {
+        console.log('Audio shared from mobile:', data);
+        if (data.audio) {
+            // Convert audio data to track format for web player
+            const track = {
+                id: data.audio.id,
+                title: data.audio.title,
+                url: data.audio.url,
+                uploadedBy: data.audio.sharedBy || data.username
+            };
+            
+            console.log('Playing shared audio:', track);
+            
+            // Set as current track and play
+            currentTrack = track;
+            
+            // Ensure URL is properly formatted
+            let audioUrl = track.url;
+            if (audioUrl && !audioUrl.startsWith('http')) {
+                audioUrl = `https://beat-9igu.onrender.com${audioUrl}`;
+            }
+            
+            console.log('Setting audio source:', audioUrl);
+            audio.src = audioUrl;
+            audio.currentTime = 0;
+            
+            audio.addEventListener('canplay', () => {
+                console.log('Shared audio can play:', track.title);
+                audio.play().catch(error => {
+                    console.error('Error playing shared audio:', error);
+                    showNotification(`Error playing ${track.title}`, 'error');
+                });
+            }, { once: true });
+            
+            audio.addEventListener('error', (e) => {
+                console.error('Audio loading error for shared track:', e);
+                console.error('Audio URL was:', audioUrl);
+                showNotification(`Error loading ${track.title}`, 'error');
+            });
+            
+            isPlaying = true;
+            updateMusicDisplay();
+            updatePlayPauseButtons();
+            
+            // Add message to chat (only if it's from another user)
+            if (data.username !== currentUsername) {
+                addMessage(`🎵 ${data.username} is playing: ${track.title}`, 'system');
+                showNotification(`${data.username} started playing ${track.title}`, 'info');
+            } else {
+                addMessage(`🎵 You started playing: ${track.title}`, 'system');
+            }
+        }
+    });
+
     // Audio synchronization events for floating player
     socket.on('audioReady', (data) => {
         console.log('Audio ready:', data);
