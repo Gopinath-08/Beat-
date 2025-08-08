@@ -149,12 +149,31 @@ function setupEventListeners() {
     playPauseBtn.addEventListener('click', () => {
         if (currentTrack) {
             const newPlayingState = !isPlaying;
+            
+            // Emit both old and new event systems for compatibility
             socket.emit('playMusic', { 
                 room: currentRoom, 
                 track: currentTrack,
                 isPlaying: newPlayingState,
                 currentTime: audio.currentTime || 0
             });
+            
+            // Also emit new floating player sync events
+            if (newPlayingState) {
+                socket.emit('audioPlay', {
+                    room: currentRoom,
+                    audioId: currentTrack.id,
+                    username: currentUsername,
+                    currentTime: audio.currentTime || 0
+                });
+            } else {
+                socket.emit('audioPause', {
+                    room: currentRoom,
+                    audioId: currentTrack.id,
+                    username: currentUsername,
+                    currentTime: audio.currentTime || 0
+                });
+            }
         }
     });
 
@@ -197,6 +216,14 @@ function setupEventListeners() {
                 room: currentRoom,
                 track: currentTrack,
                 isPlaying: isPlaying,
+                currentTime: newTime
+            });
+            
+            // Also emit seek event for floating player sync
+            socket.emit('audioSeek', {
+                room: currentRoom,
+                audioId: currentTrack.id,
+                username: currentUsername,
                 currentTime: newTime
             });
         }
@@ -258,6 +285,14 @@ function setupEventListeners() {
                 isPlaying: isPlaying,
                 currentTime: newTime
             });
+            
+            // Also emit seek event for floating player sync
+            socket.emit('audioSeek', {
+                room: currentRoom,
+                audioId: currentTrack.id,
+                username: currentUsername,
+                currentTime: newTime
+            });
         }
     });
 }
@@ -272,7 +307,22 @@ function setupAudioEventListeners() {
             const progress = (audio.currentTime / audio.duration) * 100;
             progressFill.style.width = progress + '%';
             currentTimeDisplay.textContent = formatTime(audio.currentTime);
-            console.log('Progress updated:', progress + '%', 'Current time:', audio.currentTime);
+            
+            // Sync progress with other users every 2 seconds
+            if (socket && currentTrack && isPlaying && Math.floor(audio.currentTime) % 2 === 0) {
+                socket.emit('audioProgress', {
+                    room: currentRoom,
+                    audioId: currentTrack.id,
+                    username: currentUsername,
+                    currentTime: audio.currentTime,
+                    duration: audio.duration
+                });
+            }
+            
+            // Only log every 5 seconds to reduce spam
+            if (Math.floor(audio.currentTime) % 5 === 0) {
+                console.log('Progress updated:', progress.toFixed(1) + '%', 'Current time:', formatTime(audio.currentTime));
+            }
         }
     });
 
@@ -394,7 +444,7 @@ function joinRoom(username, roomName) {
             } else {
                 audio.pause();
             }
-        });
+        }, { once: true });
 
         updateMusicDisplay();
         updatePlayPauseButtons();
@@ -476,7 +526,7 @@ function joinRoom(username, roomName) {
         if (data.username !== currentUsername) {
             showNotification(`${data.username} started playing`, 'info');
             // If we have the same audio loaded, sync with them
-            if (audio.src && audio.src.includes(data.audioId)) {
+            if (currentTrack && currentTrack.id === data.audioId) {
                 audio.currentTime = data.currentTime || 0;
                 audio.play();
                 isPlaying = true;
@@ -490,7 +540,7 @@ function joinRoom(username, roomName) {
         if (data.username !== currentUsername) {
             showNotification(`${data.username} paused`, 'info');
             // If we have the same audio loaded, sync with them
-            if (audio.src && audio.src.includes(data.audioId)) {
+            if (currentTrack && currentTrack.id === data.audioId) {
                 audio.pause();
                 isPlaying = false;
                 updatePlayPauseButtons();
@@ -503,7 +553,7 @@ function joinRoom(username, roomName) {
         if (data.username !== currentUsername) {
             showNotification(`${data.username} stopped`, 'info');
             // If we have the same audio loaded, sync with them
-            if (audio.src && audio.src.includes(data.audioId)) {
+            if (currentTrack && currentTrack.id === data.audioId) {
                 audio.pause();
                 audio.currentTime = 0;
                 isPlaying = false;
@@ -518,7 +568,7 @@ function joinRoom(username, roomName) {
         console.log('Audio seek sync:', data);
         if (data.username !== currentUsername) {
             // If we have the same audio loaded, sync with them
-            if (audio.src && audio.src.includes(data.audioId)) {
+            if (currentTrack && currentTrack.id === data.audioId) {
                 audio.currentTime = data.currentTime || 0;
                 currentTime = data.currentTime || 0;
                 updateMusicDisplay();
@@ -528,7 +578,7 @@ function joinRoom(username, roomName) {
 
     socket.on('audioProgressSync', (data) => {
         // Update progress if we're playing the same audio
-        if (audio.src && audio.src.includes(data.audioId) && data.username !== currentUsername) {
+        if (currentTrack && currentTrack.id === data.audioId && data.username !== currentUsername) {
             currentTime = data.currentTime || 0;
             updateMusicDisplay();
         }
