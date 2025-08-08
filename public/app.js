@@ -706,10 +706,26 @@ function renderTracks() {
 function playTrack(trackId) {
     const track = availableTracks.find(t => t.id === trackId);
     if (track) {
+        // Emit old event for web compatibility
         socket.emit('playMusic', { 
             room: currentRoom, 
             track: track, 
             isPlaying: true 
+        });
+        
+        // Also emit new audioShared event for mobile floating player
+        const audioData = {
+            id: track.id.toString(),
+            title: track.title,
+            url: track.url,
+            sharedBy: track.uploadedBy || currentUsername,
+            timestamp: new Date()
+        };
+        
+        socket.emit('shareAudio', {
+            room: currentRoom,
+            audio: audioData,
+            username: currentUsername
         });
     }
 }
