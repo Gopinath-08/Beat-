@@ -240,6 +240,78 @@ io.on('connection', (socket) => {
         }
     });
 
+    // Audio synchronization events for floating player
+    socket.on('audioReady', (data) => {
+        const { room, audioId, username, duration } = data;
+        console.log('Audio ready:', data);
+        
+        // Broadcast to all users in the room
+        socket.to(room).emit('audioReady', {
+            audioId,
+            username,
+            duration
+        });
+    });
+
+    socket.on('audioPlay', (data) => {
+        const { room, audioId, username, currentTime } = data;
+        console.log('Audio play:', data);
+        
+        // Broadcast to all users in the room
+        socket.to(room).emit('audioPlaySync', {
+            audioId,
+            username,
+            currentTime
+        });
+    });
+
+    socket.on('audioPause', (data) => {
+        const { room, audioId, username, currentTime } = data;
+        console.log('Audio pause:', data);
+        
+        // Broadcast to all users in the room
+        socket.to(room).emit('audioPauseSync', {
+            audioId,
+            username,
+            currentTime
+        });
+    });
+
+    socket.on('audioStop', (data) => {
+        const { room, audioId, username } = data;
+        console.log('Audio stop:', data);
+        
+        // Broadcast to all users in the room
+        socket.to(room).emit('audioStopSync', {
+            audioId,
+            username
+        });
+    });
+
+    socket.on('audioSeek', (data) => {
+        const { room, audioId, username, currentTime } = data;
+        console.log('Audio seek:', data);
+        
+        // Broadcast to all users in the room
+        socket.to(room).emit('audioSeekSync', {
+            audioId,
+            username,
+            currentTime
+        });
+    });
+
+    socket.on('audioProgress', (data) => {
+        const { room, audioId, username, currentTime, duration } = data;
+        
+        // Broadcast progress to all users in the room
+        socket.to(room).emit('audioProgressSync', {
+            audioId,
+            username,
+            currentTime,
+            duration
+        });
+    });
+
     socket.on('disconnect', () => {
         if (socket.room && socket.username) {
             const roomData = rooms.get(socket.room);

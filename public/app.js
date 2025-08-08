@@ -409,6 +409,75 @@ function joinRoom(username, roomName) {
         availableTracks = availableTracks.filter(track => track.id !== data.trackId);
         renderTracks();
     });
+
+    // Audio synchronization events for floating player
+    socket.on('audioReady', (data) => {
+        console.log('Audio ready:', data);
+        showNotification(`${data.username} loaded audio`, 'info');
+    });
+
+    socket.on('audioPlaySync', (data) => {
+        console.log('Audio play sync:', data);
+        if (data.username !== currentUsername) {
+            showNotification(`${data.username} started playing`, 'info');
+            // If we have the same audio loaded, sync with them
+            if (audio.src && audio.src.includes(data.audioId)) {
+                audio.currentTime = data.currentTime || 0;
+                audio.play();
+                isPlaying = true;
+                updatePlayPauseButtons();
+            }
+        }
+    });
+
+    socket.on('audioPauseSync', (data) => {
+        console.log('Audio pause sync:', data);
+        if (data.username !== currentUsername) {
+            showNotification(`${data.username} paused`, 'info');
+            // If we have the same audio loaded, sync with them
+            if (audio.src && audio.src.includes(data.audioId)) {
+                audio.pause();
+                isPlaying = false;
+                updatePlayPauseButtons();
+            }
+        }
+    });
+
+    socket.on('audioStopSync', (data) => {
+        console.log('Audio stop sync:', data);
+        if (data.username !== currentUsername) {
+            showNotification(`${data.username} stopped`, 'info');
+            // If we have the same audio loaded, sync with them
+            if (audio.src && audio.src.includes(data.audioId)) {
+                audio.pause();
+                audio.currentTime = 0;
+                isPlaying = false;
+                currentTime = 0;
+                updatePlayPauseButtons();
+                updateMusicDisplay();
+            }
+        }
+    });
+
+    socket.on('audioSeekSync', (data) => {
+        console.log('Audio seek sync:', data);
+        if (data.username !== currentUsername) {
+            // If we have the same audio loaded, sync with them
+            if (audio.src && audio.src.includes(data.audioId)) {
+                audio.currentTime = data.currentTime || 0;
+                currentTime = data.currentTime || 0;
+                updateMusicDisplay();
+            }
+        }
+    });
+
+    socket.on('audioProgressSync', (data) => {
+        // Update progress if we're playing the same audio
+        if (audio.src && audio.src.includes(data.audioId) && data.username !== currentUsername) {
+            currentTime = data.currentTime || 0;
+            updateMusicDisplay();
+        }
+    });
 }
 
 function showWelcomeScreen() {
