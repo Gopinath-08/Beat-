@@ -240,6 +240,18 @@ io.on('connection', (socket) => {
         }
     });
 
+    // Audio sharing event
+    socket.on('shareAudio', (data) => {
+        const { room, audio, username } = data;
+        console.log('Audio shared:', data);
+        
+        // Broadcast to all users in the room
+        socket.to(room).emit('audioShared', {
+            audio,
+            username
+        });
+    });
+
     // Audio synchronization events for floating player
     socket.on('audioReady', (data) => {
         const { room, audioId, username, duration } = data;
